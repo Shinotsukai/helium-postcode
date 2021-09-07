@@ -1,0 +1,38 @@
+
+<div class="hero is-primary is-fullheight">
+<div class="hero-body">
+    <div class="container">
+        <div class="columns is-centered">
+            <div class="column is-4">
+                <div class="box has-text-centered">
+                    <div class="field">
+                        <label class="label">
+                            Enter Postcode
+                        </label>
+
+                        <div class="dropdown mb-4" [ngClass]="{'is-active': addresses.length}">
+                            <div class="dropdown-trigger">
+                                <div class="field">
+                                    <p class="control is-expanded has-icons-right">
+                                        <input class="input" type="search" placeholder="Search..." value="{{selectedAddress.postcode}}" (keyup)="findAddress($event)"/>
+                                        <span class="icon is-small is-right"><i class="fas fa-search"></i></span>
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="dropdown-menu" id="dropdown-menu" role="menu">
+                                <div class="dropdown-content">
+                                    <div class="dropdown-item" *ngFor="let address of addresses" (click)="onAddressSelect(address.place_name,address.center)">{{address.place_name}}</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="field">
+                            <button class="button is-success" (click)="searchLocation()">Check Location</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
