@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { AfterViewInit, ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import * as mapboxgl from 'mapbox-gl';
 import { GeoJson } from 'src/app/services/GeoJson';
@@ -10,7 +10,7 @@ import { environment } from 'src/app/utils/environment';
   templateUrl: './map-screen.component.html',
   styleUrls: ['./map-screen.component.css']
 })
-export class MapScreenComponent implements OnInit {
+export class MapScreenComponent implements OnInit, AfterViewInit {
 
   searchLocation:Array<number> = [];
 
@@ -18,6 +18,8 @@ export class MapScreenComponent implements OnInit {
   style = 'mapbox://styles/mapbox/streets-v11';
   markers:any;
   hotspotList:any;
+  loading:boolean = true;
+  delay = (ms:number) => new Promise((res) => setTimeout(res, ms));
 
   constructor(private router:ActivatedRoute,private heliumApi:HeliumApiService,private cdr: ChangeDetectorRef) {
 
@@ -38,29 +40,38 @@ export class MapScreenComponent implements OnInit {
 
     const newMarker = new mapboxgl.Marker().setLngLat([coords[0],coords[1]]).addTo(this.map);
 
-    //  const newMarker = new GeoJson(coords,{message:'location'});
-    //  console.log(newMarker)
-    //  this.markers.push(newMarker);
+   }
+
+   initMap():void {
+
+    this.map = new mapboxgl.Map({
+      accessToken: environment.mapbox.accessToken,
+      container: 'map',
+      style: this.style,
+      zoom: 13,
+      center: [this.searchLocation[0], this.searchLocation[1]]
+  });
+
+  this.map.addControl(new mapboxgl.NavigationControl());
+
+  this.createMarker(this.searchLocation);
+
    }
 
   async ngOnInit(){
 
     await this.getHotspotLocations(this.searchLocation);
+    await this.delay(3000);
+    this.loading =false;
+    this.cdr.detectChanges();
+    this.initMap();
+    await this.addHotspotMarkers();
 
+      
+  }
 
+  ngAfterViewInit(){
 
-
-      this.map = new mapboxgl.Map({
-        accessToken: environment.mapbox.accessToken,
-        container: 'map',
-        style: this.style,
-        zoom: 13,
-        center: [this.searchLocation[0], this.searchLocation[1]]
-    });
-
-    this.map.addControl(new mapboxgl.NavigationControl());
-
-    this.createMarker(this.searchLocation);
   }
 
   async getHotspotLocations(coords:Array<number>){
@@ -69,12 +80,14 @@ export class MapScreenComponent implements OnInit {
     hotspots.subscribe((response:any) =>{
       this.hotspotList = response.data;
       console.log(this.hotspotList)
-      this.hotspotList.forEach((element:any) => {
-        this.createMarker([element.lng,element.lat])
-      });
-
-      this.cdr.detectChanges();
     })
+  }
+
+  async addHotspotMarkers(){
+    this.hotspotList.forEach((element:any) => {
+      this.createMarker([element.lng,element.lat])
+    });
+
   }
 
 }
