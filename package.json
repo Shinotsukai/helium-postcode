@@ -21,6 +21,7 @@
     "@types/mapbox-gl": "^2.4.1",
     "bulma": "^0.9.3",
     "mapbox-gl": "^2.4.1",
+    "node-modules": "^1.0.1",
     "rxjs": "~6.6.0",
     "tslib": "^2.3.0",
     "zone.js": "~0.11.4"
