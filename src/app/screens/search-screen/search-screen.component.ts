@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { Feature, MapboxserviceService } from 'src/app/services/mapboxservice.service';
+import { Address, Feature, MapboxserviceService } from 'src/app/services/mapboxservice.service';
 
 @Component({
   selector: 'app-search-screen',
@@ -12,20 +12,15 @@ import { Feature, MapboxserviceService } from 'src/app/services/mapboxservice.se
 
 export class SearchScreenComponent implements OnInit {
 
-  constructor(private router:Router, private mapboxService:MapboxserviceService) { }
+  constructor(private router:Router, private mapboxService:MapboxserviceService) {
 
-  // addresses: string[] = [];
-  // coords:any[] =[];
+   }
+
+
 
   addresses:Feature[] = [];
 
-
-  selectedAddress:any = {
-    postcode:'',
-    coords: []
-
-  };
-
+  selectedAddress:any = this.mapboxService.selectedAddress;
 
 
   ngOnInit(): void {
@@ -43,18 +38,19 @@ export class SearchScreenComponent implements OnInit {
   }
 
   onAddressSelect(address:string,coord:[]){
-    this.selectedAddress.postcode = address;
-    this.selectedAddress.coords = coord;
+    let selected = new Address();
+    selected.postcode = address;
+    selected.coords = coord;
+    this.mapboxService.selectedAddress.next(selected)
     this.addresses = [];
-    console.log(this.selectedAddress)
+    console.log(this.mapboxService.selectedAddress)
  
   }
 
 
   searchLocation(){
-    if(this.selectedAddress.postcode.length){
-        const actuallyThePostcode = this.selectedAddress.postcode.split(',')[0].replace(' ','').toLowerCase();
-        this.router.navigate(['search-results'], {queryParams:{find:JSON.stringify(actuallyThePostcode)}});
+    if(this.mapboxService.selectedAddress.value.postcode.length){
+        this.router.navigate(['search-results']);
     }
   }
 }

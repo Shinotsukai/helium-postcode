@@ -5,14 +5,14 @@ import { GeoJson } from 'src/app/services/GeoJson';
 import { HeliumApiService } from 'src/app/services/helium.service';
 import { environment } from 'src/app/utils/environment';
 
-import { MapboxserviceService } from 'src/app/services/mapboxservice.service';
+import { Address, MapboxserviceService } from 'src/app/services/mapboxservice.service';
 
 @Component({
   selector: 'app-map-screen',
   templateUrl: './map-screen.component.html',
   styleUrls: ['./map-screen.component.css']
 }) 
-export class MapScreenComponent implements OnInit, AfterViewInit {
+export class MapScreenComponent implements OnInit {
 
   searchLocation:Array<number> = [];
 
@@ -24,15 +24,6 @@ export class MapScreenComponent implements OnInit, AfterViewInit {
   delay = (ms:number) => new Promise((res) => setTimeout(res, ms));
 
   constructor(private router:ActivatedRoute,private heliumApi:HeliumApiService,private cdr: ChangeDetectorRef, private mapBoxService: MapboxserviceService) {
-
-    // const coords = this.router.snapshot.queryParamMap.get('coord');
-
-    // if(!coords){
-    //   this.searchLocation = new Array<number>();
-    // } else {
-    //   this.searchLocation = JSON.parse(coords);
-
-    // }
 
    }
 
@@ -62,7 +53,7 @@ export class MapScreenComponent implements OnInit, AfterViewInit {
 
   async ngOnInit(){
 
-    await this.getCoordinates()
+    await this.userAddress()
     await this.getHotspotLocations(this.searchLocation);
     await this.delay(3000);
     this.loading =false;
@@ -73,9 +64,17 @@ export class MapScreenComponent implements OnInit, AfterViewInit {
       
   }
 
-  ngAfterViewInit(){
+  async userAddress(){
 
+    if(this.mapBoxService.selectedAddress.value.coords.length){
+      this.searchLocation = this.mapBoxService.selectedAddress.value.coords
+    }
+
+    else {
+      await this.getCoordinates();
+      }
   }
+
 
   async getCoordinates(){
     const para = this.router.snapshot.queryParamMap.get('find');
@@ -88,7 +87,11 @@ export class MapScreenComponent implements OnInit, AfterViewInit {
       }else{
         try{
           const searchRes = await this.mapBoxService.searchWord(wtWeGt).toPromise();
-          this.searchLocation = searchRes[0].center;
+          let result = new Address();
+          result.postcode = searchRes[0].place_name;
+          result.coords = searchRes[0].center;
+          this.mapBoxService.selectedAddress.next(result);
+          await this.userAddress();
         }catch(err){
           console.log(`done fked it: ${err}`)
         }
