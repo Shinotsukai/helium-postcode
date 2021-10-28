@@ -47,13 +47,14 @@ export class SearchScreenComponent implements OnInit {
     this.selectedAddress.coords = coord;
     this.addresses = [];
     console.log(this.selectedAddress)
-
+ 
   }
 
 
   searchLocation(){
-if(this.selectedAddress.postcode.length){
-    this.router.navigate(['search-results'], {queryParams:{coord:JSON.stringify(this.selectedAddress.coords)}});
-}
+    if(this.selectedAddress.postcode.length){
+        const actuallyThePostcode = this.selectedAddress.postcode.split(',')[0].replace(' ','').toLowerCase();
+        this.router.navigate(['search-results'], {queryParams:{find:JSON.stringify(actuallyThePostcode)}});
+    }
   }
 }

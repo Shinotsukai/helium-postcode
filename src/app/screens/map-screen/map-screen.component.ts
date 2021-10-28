@@ -5,11 +5,13 @@ import { GeoJson } from 'src/app/services/GeoJson';
 import { HeliumApiService } from 'src/app/services/helium.service';
 import { environment } from 'src/app/utils/environment';
 
+import { MapboxserviceService } from 'src/app/services/mapboxservice.service';
+
 @Component({
   selector: 'app-map-screen',
   templateUrl: './map-screen.component.html',
   styleUrls: ['./map-screen.component.css']
-})
+}) 
 export class MapScreenComponent implements OnInit, AfterViewInit {
 
   searchLocation:Array<number> = [];
@@ -21,22 +23,22 @@ export class MapScreenComponent implements OnInit, AfterViewInit {
   loading:boolean = true;
   delay = (ms:number) => new Promise((res) => setTimeout(res, ms));
 
-  constructor(private router:ActivatedRoute,private heliumApi:HeliumApiService,private cdr: ChangeDetectorRef) {
+  constructor(private router:ActivatedRoute,private heliumApi:HeliumApiService,private cdr: ChangeDetectorRef, private mapBoxService: MapboxserviceService) {
 
-    const coords = this.router.snapshot.queryParamMap.get('coord');
+    // const coords = this.router.snapshot.queryParamMap.get('coord');
 
-    if(!coords){
-      this.searchLocation = new Array<number>();
-    } else {
-      this.searchLocation = JSON.parse(coords);
+    // if(!coords){
+    //   this.searchLocation = new Array<number>();
+    // } else {
+    //   this.searchLocation = JSON.parse(coords);
 
-    }
+    // }
 
    }
 
    createMarker(coords:Array<number>,name?:string){
 
-    console.log(coords);
+    console.log(`createMarker: ${coords}`);
 
     const newMarker = new mapboxgl.Marker().setLngLat([coords[0],coords[1]]).addTo(this.map);
 
@@ -50,16 +52,17 @@ export class MapScreenComponent implements OnInit, AfterViewInit {
       style: this.style,
       zoom: 13,
       center: [this.searchLocation[0], this.searchLocation[1]]
-  });
+    });
 
-  this.map.addControl(new mapboxgl.NavigationControl());
+    this.map.addControl(new mapboxgl.NavigationControl());
 
-  this.createMarker(this.searchLocation);
+    this.createMarker(this.searchLocation);
 
    }
 
   async ngOnInit(){
 
+    await this.getCoordinates()
     await this.getHotspotLocations(this.searchLocation);
     await this.delay(3000);
     this.loading =false;
@@ -72,6 +75,25 @@ export class MapScreenComponent implements OnInit, AfterViewInit {
 
   ngAfterViewInit(){
 
+  }
+
+  async getCoordinates(){
+    const para = this.router.snapshot.queryParamMap.get('find');
+    if(!para){
+      this.searchLocation = new Array<number>();
+    }else{
+      const wtWeGt = JSON.parse(para);
+      if(Array.isArray(wtWeGt)){
+        this.searchLocation = wtWeGt;
+      }else{
+        try{
+          const searchRes = await this.mapBoxService.searchWord(wtWeGt).toPromise();
+          this.searchLocation = searchRes[0].center;
+        }catch(err){
+          console.log(`done fked it: ${err}`)
+        }
+      }
+    }
   }
 
   async getHotspotLocations(coords:Array<number>){
